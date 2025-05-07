@@ -8,7 +8,7 @@ const path = require('path');
 const config = require('./config/config');
 const errorHandler = require('./middleware/errorHandler');
 const documentsRouter = require('./routes/documents');
-
+const clinicalIntakeRoutes = require('./routes/clinicalIntake');
 
 // Import routes
 // const authRoutes = require('./routes/auth.routes');
@@ -32,6 +32,12 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, '../uploads');
 if (!require('fs').existsSync(uploadsDir)) {
@@ -47,9 +53,15 @@ app.use('/uploads', express.static(uploadsDir));
 // app.use('/api/users', userRoutes);
 // app.use('/api/health', healthRoutes);
 app.use('/api/documents', documentsRouter);
+app.use('/api/clinical-intake', clinicalIntakeRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/study-protocols', studyProtocolRoutes);
 app.use('/api/documentEditor', documentEditorRoutes);
+
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is running' });
+});
 
 // Error handling
 app.use(errorHandler);
@@ -61,6 +73,7 @@ app.get('/', (req, res) => {
 app.get('/api', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
+
 // Database connection
 mongoose.connect(config.mongoUri)
   .then(() => console.log('Connected to MongoDB'))
